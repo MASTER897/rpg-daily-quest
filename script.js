@@ -354,12 +354,37 @@ function pickRotatedDailyQuests(excludeTitles = [], count = DAILY_ROTATION_COUNT
   }));
 }
 
+const PINNED_DAILY_QUESTS = [
+  { id: 4, title: "Kerja shift di Mie Gacoan", category: "Kerja", rank: "S", xp: 100, gold: 55, done: false, autoRotated: false, dailyRecurring: true },
+];
+
+function ensurePinnedDailyQuests(targetState, { resetDone = false } = {}) {
+  const pinnedIds = new Set(PINNED_DAILY_QUESTS.map((q) => q.id));
+  const byId = new Map(targetState.quests.map((q) => [q.id, q]));
+  const pinnedList = PINNED_DAILY_QUESTS.map((tpl) => {
+    const existing = byId.get(tpl.id);
+    if (!existing) return structuredClone(tpl);
+    return {
+      ...existing,
+      autoRotated: false,
+      dailyRecurring: true,
+      category: existing.category || tpl.category,
+      done: resetDone ? false : Boolean(existing.done),
+    };
+  });
+  const rest = targetState.quests.filter((q) => !pinnedIds.has(q.id));
+  targetState.quests = [...pinnedList, ...rest];
+}
+
 function rotateDailyQuests(targetState, { resetDay = false, dateStr = getLocalDateStr() } = {}) {
-  const excludeTitles = targetState.quests.map((q) => q.title);
+  const excludeTitles = targetState.quests.filter((q) => !q.dailyRecurring).map((q) => q.title);
+  const pinnedIds = new Set(PINNED_DAILY_QUESTS.map((q) => q.id));
+  const pinned = targetState.quests.filter((q) => q.dailyRecurring || pinnedIds.has(q.id));
   if (resetDay) {
-    const customQuests = targetState.quests.filter((q) => !q.autoRotated && q.id > 3);
+    const customQuests = targetState.quests.filter((q) => !q.autoRotated && !q.dailyRecurring && !pinnedIds.has(q.id) && q.id > 3);
     customQuests.forEach((q) => (q.done = false));
-    targetState.quests = [...pickRotatedDailyQuests(excludeTitles, DAILY_ROTATION_COUNT), ...customQuests];
+    targetState.quests = [...pinned, ...pickRotatedDailyQuests(excludeTitles, DAILY_ROTATION_COUNT), ...customQuests];
+    ensurePinnedDailyQuests(targetState, { resetDone: true });
     targetState.todos.forEach((t) => (t.done = false));
     targetState.dailyXp = 0;
     targetState.dailyBonusClaimed = false;
@@ -370,9 +395,10 @@ function rotateDailyQuests(targetState, { resetDay = false, dateStr = getLocalDa
   const keptDoneAuto = targetState.quests.filter((q) => q.autoRotated && q.done);
   const needed = Math.max(0, DAILY_ROTATION_COUNT - keptDoneAuto.length);
   if (needed === 0) return false;
-  const customQuests = targetState.quests.filter((q) => !q.autoRotated);
+  const customQuests = targetState.quests.filter((q) => !q.autoRotated && !q.dailyRecurring && !pinnedIds.has(q.id));
   const fresh = pickRotatedDailyQuests(excludeTitles, needed);
-  targetState.quests = [...keptDoneAuto, ...fresh, ...customQuests];
+  targetState.quests = [...pinned, ...keptDoneAuto, ...fresh, ...customQuests];
+  ensurePinnedDailyQuests(targetState, { resetDone: false });
   return true;
 }
 
@@ -626,6 +652,7 @@ function loadState() {
     } else if (parsed.lastQuestDate !== todayStr) {
       applyAutoDayRollover(merged, todayStr);
     }
+    ensurePinnedDailyQuests(merged, { resetDone: false });
     return merged;
   } catch {
     return structuredClone(DEFAULT_STATE);
@@ -758,12 +785,19 @@ function renderTaskList({ items, listEl, emptyEl, summaryEl, mode, fixedXp, onTo
     reward.className = "reward-text";
     reward.textContent = `+${item.xp || fixedXp} XP`;
 
-    const del = document.createElement("button");
-    del.className = "icon-btn danger";
-    del.textContent = "×";
-    del.onclick = () => onDelete(item.id);
-
-    right.append(reward, del);
+    if (item.dailyRecurring) {
+      const pin = document.createElement("span");
+      pin.className = "pin-badge";
+      pin.title = "Quest wajib harian — selalu muncul setiap hari";
+      pin.textContent = "📌 Tetap";
+      right.append(reward, pin);
+    } else {
+      const del = document.createElement("button");
+      del.className = "icon-btn danger";
+      del.textContent = "×";
+      del.onclick = () => onDelete(item.id);
+      right.append(reward, del);
+    }
     li.append(left, right);
     listEl.appendChild(li);
   });

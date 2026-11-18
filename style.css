@@ -587,6 +587,15 @@ textarea:focus {
   color: var(--danger);
 }
 
+.pin-badge {
+  font-family: "Consolas", monospace;
+  font-size: 10px;
+  padding: 1px 6px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: rgba(250, 204, 21, 0.12);
+}
+
 /* Titles & Badges Grid */
 .titles-grid {
   display: grid;
