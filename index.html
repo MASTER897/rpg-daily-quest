@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixel Guild — RPG Daily Work, Full Stack, Cyber &amp; Pixel Art</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="rpg-container">
+    <!-- Hero Status & XP / Target Harian -->
+    <header class="pixel-panel hero-card">
+      <div class="hero-top">
+        <div class="hero-identity">
+          <div class="avatar-box" aria-hidden="true">⚔️</div>
+          <div>
+            <p class="hero-title">PIXEL ARTISAN &amp; DEV GUILD</p>
+            <h1 class="hero-name">
+              Adventurer
+              <span id="hero-level" class="level-badge">LV. 1</span>
+            </h1>
+            <div id="hero-active-titles" class="title-tags-row"></div>
+          </div>
+        </div>
+        <div class="stats-pills">
+          <div class="stat-pill">
+            <span class="stat-label">STREAK</span>
+            <span id="streak-count" class="stat-value">1 Hari</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-label">GOLD</span>
+            <span id="gold-count" class="stat-value gold">0 G</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bars-grid">
+        <div class="bar-block">
+          <div class="bar-header">
+            <span>EXPERIENCE (XP)</span>
+            <span id="xp-text" class="mono">0 / 100 XP</span>
+          </div>
+          <div class="bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="xp-bar-fill" class="bar-fill xp-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bar-block">
+          <div class="bar-header">
+            <span>🎯 TARGET HARIAN</span>
+            <span id="target-text" class="mono">0 / 100 XP</span>
+          </div>
+          <div class="bar-track">
+            <div id="target-bar-fill" class="bar-fill target-fill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="daily-target-bar">
+        <label for="daily-target-input" class="muted-label">Target XP Hari Ini:</label>
+        <div class="target-controls">
+          <input id="daily-target-input" type="number" min="20" max="1000" step="10" value="100" />
+          <button type="button" id="claim-daily-btn" class="pixel-btn gold-btn" disabled>Klaim Bonus (+25 G)</button>
+          <button type="button" id="reset-daily-btn" class="pixel-btn ghost">Reset Hari</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" aria-label="Menu Utama">
+      <button type="button" class="tab-btn active" data-tab="tracker">⚔️ Quest &amp; Habit</button>
+      <button type="button" class="tab-btn" data-tab="skills">🏆 Skills &amp; Gelar</button>
+      <button type="button" class="tab-btn" data-tab="journal">📓 Daily Journal</button>
+      <button type="button" class="tab-btn" data-tab="rewards">🎁 Toko Reward</button>
+      <button type="button" class="tab-btn" data-tab="portfolio">🎨 Portofolio &amp; Harga</button>
+    </nav>
+
+    <!-- TAB 1: Quest Harian + Habit & To-Do List -->
+    <section id="tab-tracker" class="tab-panel active">
+      <div class="main-grid">
+        <div class="pixel-panel">
+          <div class="board-header">
+            <h2 class="section-heading">📜 Quest Harian</h2>
+            <div class="board-actions">
+              <button id="reroll-quests-btn" type="button" class="pixel-btn ghost sm" title="Acak ulang quest rotasi yang belum selesai">🎲 Acak Quest</button>
+              <span id="quest-summary" class="mono summary-tag">0/0</span>
+            </div>
+          </div>
+          <form id="quest-form" class="inline-form">
+            <input type="text" id="quest-input" placeholder="Misi utama (misal: Bikin 3 sprite)..." maxlength="80" required />
+            <select id="quest-rank" aria-label="Rank Quest">
+              <option value="C" data-xp="20" data-gold="8">C (+20 XP)</option>
+              <option value="B" data-xp="35" data-gold="15" selected>B (+35 XP)</option>
+              <option value="A" data-xp="60" data-gold="30">A (+60 XP)</option>
+              <option value="S" data-xp="100" data-gold="55">S (+100 XP)</option>
+            </select>
+            <button type="submit" class="pixel-btn primary">+ Quest</button>
+          </form>
+          <ul id="quest-list" class="item-list"></ul>
+          <p id="quest-empty" class="empty-state hidden">Belum ada quest harian.</p>
+        </div>
+
+        <div class="pixel-panel">
+          <div class="board-header">
+            <h2 class="section-heading">✅ Habit &amp; To-Do List (+10 XP)</h2>
+            <span id="todo-summary" class="mono summary-tag">0/0</span>
+          </div>
+          <form id="todo-form" class="inline-form">
+            <input type="text" id="todo-input" placeholder="Habit / tugas harian cepat..." maxlength="80" required />
+            <select id="todo-tag" aria-label="Tag To-Do">
+              <option value="Daily">#Daily</option>
+              <option value="Kerja">#Kerja</option>
+              <option value="FullStack">#FullStack</option>
+              <option value="Cybersecurity">#Cybersecurity</option>
+              <option value="PixelArt">#PixelArt</option>
+              <option value="GameDev">#GameDev</option>
+              <option value="Commission">#Commission</option>
+            </select>
+            <button type="submit" class="pixel-btn primary">+ To-Do</button>
+          </form>
+          <ul id="todo-list" class="item-list"></ul>
+          <p id="todo-empty" class="empty-state hidden">Belum ada habit atau to-do.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Full Stack & Cybersecurity Paths + Titles -->
+    <section id="tab-skills" class="tab-panel">
+      <div id="skill-paths-grid" class="main-grid"></div>
+
+      <div class="pixel-panel">
+        <div class="board-header">
+          <div>
+            <h3 class="section-heading">🏷️ Tag Gelar Karakter &amp; Portofolio (Titles &amp; Badges)</h3>
+            <p class="muted-label">Klik gelar yang sudah terbuka untuk pasang/lepas di Hero Card &amp; Banner Portofolio (bisa pasang beberapa sekaligus).</p>
+          </div>
+        </div>
+        <div id="titles-grid" class="titles-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Daily Journal -->
+    <section id="tab-journal" class="tab-panel">
+      <div class="pixel-panel">
+        <div class="board-header">
+          <h2 class="section-heading">📓 Daily Journal (+15 XP per entri)</h2>
+          <span id="journal-count" class="mono summary-tag">0 Catatan</span>
+        </div>
+
+        <form id="journal-form" class="journal-form">
+          <div class="journal-row">
+            <select id="journal-mood" aria-label="Mood Hari Ini">
+              <option value="🔥 Semangat">🔥 Semangat</option>
+              <option value="💼 Shift Kerja Gacoan">💼 Shift Kerja Gacoan</option>
+              <option value="🎨 Fokus Berkarya">🎨 Fokus Berkarya</option>
+              <option value="💻 Ngoding Full Stack">💻 Ngoding Full Stack</option>
+              <option value="🛡️ Lab Cybersecurity">🛡️ Lab Cybersecurity</option>
+              <option value="🎮 Bikin Game">🎮 Bikin Game</option>
+              <option value="☕ Santai">☕ Santai</option>
+            </select>
+            <input type="text" id="journal-title" placeholder="Judul log hari ini (misal: Belajar REST API / Lab Wireshark)..." maxlength="70" required />
+          </div>
+          <textarea id="journal-body" rows="3" placeholder="Tulis progres belajar, kendala, atau pencapaian hari ini..." required></textarea>
+          <div class="journal-actions">
+            <button type="submit" class="pixel-btn primary">💾 Simpan Jurnal (+15 XP)</button>
+          </div>
+        </form>
+
+        <div id="journal-list" class="journal-list"></div>
+        <p id="journal-empty" class="empty-state hidden">Belum ada catatan jurnal. Tulis log pertama lo hari ini!</p>
+      </div>
+    </section>
+
+    <!-- TAB 4: Reward Shop -->
+    <section id="tab-rewards" class="tab-panel">
+      <div class="pixel-panel">
+        <div class="board-header">
+          <div>
+            <h2 class="section-heading">🎁 Toko Reward (Tukar Gold)</h2>
+            <p class="muted-label">Ide hadiah santai buat apresiasi diri setelah nyelesaiin quest &amp; jurnal harian.</p>
+          </div>
+        </div>
+        <form id="reward-form" class="inline-form">
+          <input type="text" id="reward-input" placeholder="Tambah hadiah sendiri (contoh: Beli Skin Game)..." maxlength="60" required />
+          <input type="number" id="reward-cost" min="5" max="500" step="5" value="25" aria-label="Harga Gold" />
+          <button type="submit" class="pixel-btn primary">+ Reward</button>
+        </form>
+        <div id="reward-list" class="reward-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Pixel Art Portfolio & Daftar Harga -->
+    <section id="tab-portfolio" class="tab-panel">
+      <div class="pixel-panel profile-banner">
+        <div class="profile-preview-row">
+          <div class="profile-avatar-wrap" id="profile-avatar-preview" aria-label="Foto Profil Portofolio"></div>
+          <div class="profile-meta">
+            <h2 id="profile-name-display" class="profile-name">Studio Pixel Gue</h2>
+            <div id="portfolio-title-badges" class="title-tags-row"></div>
+            <p id="profile-bio-display" class="muted-label">Open Pixel Art Asset Pack &amp; Custom Commission • PayPal ($1–$5+)</p>
+          </div>
+          <button type="button" id="toggle-profile-edit-btn" class="pixel-btn ghost">✏️ Ubah Profil</button>
+        </div>
+
+        <form id="profile-edit-form" class="profile-edit-form hidden">
+          <input type="text" id="profile-name-input" placeholder="Nama Portofolio / Studio..." maxlength="50" required />
+          <input type="text" id="profile-bio-input" placeholder="Tagline / Status Commission..." maxlength="100" />
+          <label class="file-btn">
+            📷 Ganti Foto
+            <input type="file" id="profile-avatar-file" accept="image/png,image/gif,image/webp,image/jpeg" />
+          </label>
+          <button type="submit" class="pixel-btn primary">Simpan Profil</button>
+        </form>
+      </div>
+
+      <div class="pixel-panel portfolio-header-panel">
+        <div class="board-header">
+          <div>
+            <h2 class="section-heading">🎨 Galeri Karya &amp; Daftar Harga</h2>
+            <p class="muted-label">Tambah, edit, atau saring aset berdasarkan tag (contoh: <code>#FullStack</code>, <code>#Cybersecurity</code>, <code>#16x16</code>).</p>
+          </div>
+          <div class="rate-box">
+            <label for="usd-rate-input" class="muted-label">Kurs $1 (Rp):</label>
+            <input id="usd-rate-input" type="number" min="10000" max="30000" step="50" value="18280" />
+          </div>
+        </div>
+
+        <form id="portfolio-form" class="portfolio-form">
+          <input type="hidden" id="art-edit-id" value="" />
+          <input type="text" id="art-title" placeholder="Nama Aset / Proyek..." maxlength="60" required />
+          <select id="art-category" aria-label="Kategori">
+            <option value="Asset Pack">Asset Pack</option>
+            <option value="Commission">Commission</option>
+            <option value="Sprite / Animasi">Sprite / Animasi</option>
+            <option value="Tileset">Tileset</option>
+            <option value="Game Dev">Game Dev</option>
+            <option value="Dev & Security">Dev &amp; Security</option>
+          </select>
+          <input type="text" id="art-tags" placeholder="Tag (pisah koma: 16x16, FullStack, Cybersecurity)" maxlength="80" />
+          <input type="number" id="art-price" min="1" max="500" step="1" value="5" aria-label="Harga USD" />
+          <label class="file-btn">
+            🖼️ Pilih Gambar
+            <input type="file" id="art-file" accept="image/png,image/gif,image/webp,image/jpeg" />
+          </label>
+          <button type="submit" id="art-submit-btn" class="pixel-btn primary">+ Pajang Karya</button>
+          <button type="button" id="art-cancel-btn" class="pixel-btn ghost hidden">Batal</button>
+        </form>
+
+        <div id="tag-filter-bar" class="tag-filter-bar" aria-label="Filter Tag Portofolio"></div>
+        <div id="portfolio-grid" class="portfolio-grid"></div>
+        <p id="portfolio-empty" class="empty-state hidden">Tidak ada karya dengan tag tersebut.</p>
+      </div>
+
+      <div class="main-grid">
+        <div class="pixel-panel">
+          <h3 class="section-heading">📦 Daftar Harga Paket Aset (Itch.io / Ko-fi)</h3>
+          <div class="table-wrap">
+            <table class="price-table">
+              <thead>
+                <tr>
+                  <th>Jenis Paket</th>
+                  <th>Isi Paket</th>
+                  <th>USD</th>
+                  <th>Estimasi IDR</th>
+                </tr>
+              </thead>
+              <tbody id="pack-price-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pixel-panel">
+          <h3 class="section-heading">🖌️ Tarif Custom Commission</h3>
+          <div class="table-wrap">
+            <table class="price-table">
+              <thead>
+                <tr>
+                  <th>Jenis Order</th>
+                  <th>Detail / Ukuran</th>
+                  <th>USD</th>
+                  <th>Estimasi IDR</th>
+                </tr>
+              </thead>
+              <tbody id="comm-price-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="udemy-progress.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
