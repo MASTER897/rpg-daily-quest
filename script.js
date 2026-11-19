@@ -388,6 +388,8 @@ function rotateDailyQuests(targetState, { resetDay = false, dateStr = getLocalDa
     targetState.todos.forEach((t) => (t.done = false));
     targetState.dailyXp = 0;
     targetState.dailyBonusClaimed = false;
+    targetState.holidayMode = false;
+    targetState.holidayAllowFreeTime = false;
     targetState.lastQuestDate = dateStr;
     return true;
   }
@@ -403,9 +405,28 @@ function rotateDailyQuests(targetState, { resetDay = false, dateStr = getLocalDa
 }
 
 function applyAutoDayRollover(targetState, dateStr = getLocalDateStr()) {
-  const hadProgress = (targetState.dailyXp || 0) > 0 || targetState.quests.some((q) => q.done) || targetState.todos.some((t) => t.done);
+  const hadProgress = (targetState.dailyXp || 0) > 0 || Boolean(targetState.holidayMode) || targetState.quests.some((q) => q.done) || targetState.todos.some((t) => t.done);
   if (hadProgress) targetState.streak += 1;
   rotateDailyQuests(targetState, { resetDay: true, dateStr });
+}
+
+function isHolidayReward(reward) {
+  return Boolean(reward && (reward.id === 206 || /hari libur/i.test(reward.title || "")));
+}
+
+function isTaskLockedByHoliday(item, mode) {
+  if (!state.holidayMode) return false;
+  if (mode === "quest" && (item.dailyRecurring || item.id === 4)) return "shift";
+  if ((mode === "quest" || mode === "todo") && !state.holidayAllowFreeTime) return "holiday";
+  return false;
+}
+
+function holidayLockToast(lockKind) {
+  if (lockKind === "shift") {
+    showToast("🏖️ Hari Libur aktif — Shift Mie Gacoan dikunci biar lo istirahat total!");
+  } else {
+    showToast("🏖️ Mode Libur aktif (bebas tugas). Klik '🔓 Lagi Senggang' di atas kalau mau tetap ngerjain!");
+  }
 }
 
 const DEFAULT_STATE = {
@@ -416,6 +437,8 @@ const DEFAULT_STATE = {
   dailyXp: 0,
   dailyTarget: 100,
   dailyBonusClaimed: false,
+  holidayMode: false,
+  holidayAllowFreeTime: false,
   lastQuestDate: getLocalDateStr(),
   usdRate: 18280,
   activeTab: "skills",
@@ -517,6 +540,10 @@ const el = {
   claimDailyBtn: document.getElementById("claim-daily-btn"),
   resetDailyBtn: document.getElementById("reset-daily-btn"),
   rerollQuestsBtn: document.getElementById("reroll-quests-btn"),
+  holidayBanner: document.getElementById("holiday-banner"),
+  holidayBannerText: document.getElementById("holiday-banner-text"),
+  holidayFreetimeBtn: document.getElementById("holiday-freetime-btn"),
+  holidayEndBtn: document.getElementById("holiday-end-btn"),
   questForm: document.getElementById("quest-form"),
   questInput: document.getElementById("quest-input"),
   questRank: document.getElementById("quest-rank"),
@@ -743,16 +770,17 @@ function renderTaskList({ items, listEl, emptyEl, summaryEl, mode, fixedXp, onTo
   listEl.innerHTML = "";
 
   items.forEach((item) => {
+    const lockKind = isTaskLockedByHoliday(item, mode);
     const li = document.createElement("li");
-    li.className = `quest-item${item.done ? " done" : ""}`;
+    li.className = `quest-item${item.done ? " done" : ""}${lockKind ? " locked" : ""}`;
 
     const left = document.createElement("div");
     left.className = "quest-left";
-    left.onclick = () => onToggle(item.id);
+    left.onclick = () => (lockKind ? holidayLockToast(lockKind) : onToggle(item.id));
 
     const box = document.createElement("span");
     box.className = "quest-checkbox";
-    box.textContent = item.done ? "✓" : "";
+    box.textContent = lockKind ? "🔒" : item.done ? "✓" : "";
     left.append(box);
 
     if (mode === "quest") {
@@ -787,9 +815,9 @@ function renderTaskList({ items, listEl, emptyEl, summaryEl, mode, fixedXp, onTo
 
     if (item.dailyRecurring) {
       const pin = document.createElement("span");
-      pin.className = "pin-badge";
-      pin.title = "Quest wajib harian — selalu muncul setiap hari";
-      pin.textContent = "📌 Tetap";
+      pin.className = `pin-badge${lockKind === "shift" ? " holiday-lock" : ""}`;
+      pin.title = lockKind === "shift" ? "Shift dikunci karena Mode Hari Libur aktif" : "Quest wajib harian — selalu muncul setiap hari";
+      pin.textContent = lockKind === "shift" ? "🔒 Libur" : "📌 Tetap";
       right.append(reward, pin);
     } else {
       const del = document.createElement("button");
@@ -1031,14 +1059,22 @@ function renderRewards() {
     };
     top.append(name, del);
 
+    const isHoliday = isHolidayReward(reward);
+    const alreadyHoliday = isHoliday && state.holidayMode;
     const btn = document.createElement("button");
     btn.className = "pixel-btn gold-btn";
-    btn.textContent = `Tukar (${reward.cost} G)`;
-    btn.disabled = state.gold < reward.cost;
+    btn.textContent = alreadyHoliday ? "🏖️ Sedang Libur ✓" : `Tukar (${reward.cost} G)`;
+    btn.disabled = alreadyHoliday || state.gold < reward.cost;
     btn.onclick = () => {
-      if (state.gold < reward.cost) return;
+      if (alreadyHoliday || state.gold < reward.cost) return;
       state.gold -= reward.cost;
-      showToast(`🎁 Reward diklaim: ${reward.title}!`);
+      if (isHoliday) {
+        state.holidayMode = true;
+        state.holidayAllowFreeTime = false;
+        showToast("🏖️ Mode Hari Libur Aktif! Shift Gacoan terkunci & semua tugas bebas (streak aman!).");
+      } else {
+        showToast(`🎁 Reward diklaim: ${reward.title}!`);
+      }
       render();
     };
 
@@ -1206,6 +1242,18 @@ function render() {
   el.claimDailyBtn.disabled = !targetReached || state.dailyBonusClaimed;
   el.claimDailyBtn.textContent = state.dailyBonusClaimed ? "Bonus Diklaim ✓" : `Klaim Bonus (+${DAILY_BONUS_GOLD} G)`;
 
+  if (el.holidayBanner) {
+    el.holidayBanner.classList.toggle("hidden", !state.holidayMode);
+    if (state.holidayMode) {
+      el.holidayBannerText.textContent = state.holidayAllowFreeTime
+        ? "🏖️ Mode Hari Libur (Senggang Aktif): Shift Mie Gacoan tetap terkunci 🔒 — Quest lain & Habit bebas dikerjain kalau lagi senggang! Streak tetap aman."
+        : "🏖️ Mode Hari Libur Aktif (Bebas Tugas): Shift Mie Gacoan & semua tugas terkunci 🔒 — santai full, streak tetap aman! Klik 'Lagi Senggang' kalau mau tetap ngerjain quest/habit lain.";
+      el.holidayFreetimeBtn.textContent = state.holidayAllowFreeTime
+        ? "🔒 Kunci Lagi (Santai Full)"
+        : "🔓 Lagi Senggang (Buka Quest & Habit)";
+    }
+  }
+
   renderTaskList({
     items: state.quests,
     listEl: el.questList,
@@ -1215,6 +1263,11 @@ function render() {
     onToggle: (id) => {
       const q = state.quests.find((item) => item.id === id);
       if (!q) return;
+      const lockKind = isTaskLockedByHoliday(q, "quest");
+      if (lockKind) {
+        holidayLockToast(lockKind);
+        return;
+      }
       q.done = !q.done;
       applyReward(q.done ? q.xp : -q.xp, q.done ? q.gold : -q.gold);
       if (q.done) showToast(`⚔️ Quest Clear! +${q.xp} XP, +${q.gold} G`);
@@ -1237,6 +1290,11 @@ function render() {
     onToggle: (id) => {
       const t = state.todos.find((item) => item.id === id);
       if (!t) return;
+      const lockKind = isTaskLockedByHoliday(t, "todo");
+      if (lockKind) {
+        holidayLockToast(lockKind);
+        return;
+      }
       t.done = !t.done;
       applyReward(t.done ? TODO_REWARD.xp : -TODO_REWARD.xp, t.done ? TODO_REWARD.gold : -TODO_REWARD.gold);
       if (t.done) showToast(`✅ Habit Selesai! +${TODO_REWARD.xp} XP, +${TODO_REWARD.gold} G`);
@@ -1419,6 +1477,29 @@ if (el.rerollQuestsBtn) {
       return;
     }
     showToast("🎲 Quest harian diacak ulang dengan misi baru!");
+    render();
+  });
+}
+
+if (el.holidayFreetimeBtn) {
+  el.holidayFreetimeBtn.addEventListener("click", () => {
+    if (!state.holidayMode) return;
+    state.holidayAllowFreeTime = !state.holidayAllowFreeTime;
+    showToast(
+      state.holidayAllowFreeTime
+        ? "🔓 Mode Senggang aktif! Quest & Habit lain bisa dikerjain, Shift Gacoan tetap terkunci."
+        : "🔒 Kembali ke Santai Full! Semua Quest & Habit dikunci lagi."
+    );
+    render();
+  });
+}
+
+if (el.holidayEndBtn) {
+  el.holidayEndBtn.addEventListener("click", () => {
+    if (!state.holidayMode) return;
+    state.holidayMode = false;
+    state.holidayAllowFreeTime = false;
+    showToast("⚡ Mode Hari Libur diakhiri! Semua Quest & Shift Mie Gacoan kembali normal.");
     render();
   });
 }
