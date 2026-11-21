@@ -1,8 +1,8 @@
 // Live snapshot kedua kursus Udemy yang dipantau untuk Jalur Game Dev & Pixel Art.
 // Diperbarui otomatis saat progres kuliah Udemy bertambah.
 window.UDEMY_COURSES_SNAPSHOT = {
-  syncVersion: "2026-11-18T05:02+08",
-  syncLabel: "18 Nov 2026 05:02 WIB",
+  syncVersion: "2026-11-21T12:12+08",
+  syncLabel: "21 Nov 2026 12:12",
   courses: {
     gamedev: {
       courseTitle: "Jumpstart to 2D Game Development: Godot 4 for Beginners",
@@ -32,16 +32,16 @@ window.UDEMY_COURSES_SNAPSHOT = {
     },
     pixelart: {
       courseTitle: "Pixel Art Master Course - Beginner to Professional/Freelance",
-      courseUrl: "https://www.udemy.com/course/pixel-art-master-course/learn/lecture/10984438#content",
-      completedLectures: 9,
+      courseUrl: "https://www.udemy.com/course/pixel-art-master-course/learn/lecture/10984442#content",
+      completedLectures: 15,
       totalLectures: 222,
-      currentStatus: "Bagian 2 • 10. Lines (#10984438 - lanjut)",
-      note: "Bagian 1 Getting started selesai 8/8! Lanjut Lines and Shapes (1/5)",
+      currentStatus: "Bagian 3 • 15. Value and contrast basics ✓ (lanjut #16 Negative & positive space)",
+      note: "Bagian 1 (8/8) & Bagian 2 (5/5) selesai! Lanjut Shading and lighting (2/12)",
       idRange: [711, 730],
       sections: [
         { id: 711, title: "Udemy Pixel Sec 1: Getting started (8/8)", done: true },
-        { id: 712, title: "Udemy Pixel Sec 2: Lines and Shapes [B] (1/5 - aktif #10 Lines)", done: false },
-        { id: 713, title: "Udemy Pixel Sec 3: Shading and lighting [B] (0/12)", done: false },
+        { id: 712, title: "Udemy Pixel Sec 2: Lines and Shapes [B] (5/5)", done: true },
+        { id: 713, title: "Udemy Pixel Sec 3: Shading and lighting [B] (2/12 - lanjut #16)", done: false },
         { id: 714, title: "Udemy Pixel Sec 4: Colours and textures [B] (0/11)", done: false },
         { id: 715, title: "Udemy Pixel Sec 5: Drawing simple objects [B] (0/9)", done: false },
         { id: 716, title: "Udemy Pixel Sec 6: Tiles [B] (0/8)", done: false },

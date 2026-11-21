@@ -81,7 +81,8 @@
       <button type="button" class="tab-btn" data-tab="skills">🏆 Skills &amp; Gelar</button>
       <button type="button" class="tab-btn" data-tab="journal">📓 Daily Journal</button>
       <button type="button" class="tab-btn" data-tab="rewards">🎁 Toko Reward</button>
-      <button type="button" class="tab-btn" data-tab="portfolio">🎨 Portofolio &amp; Harga</button>
+      <button type="button" class="tab-btn" data-tab="portfolio">🎨 Galeri &amp; My Project</button>
+      <button type="button" class="tab-btn" data-tab="pricing">💰 Daftar Harga</button>
     </nav>
 
     <!-- TAB 1: Quest Harian + Habit & To-Do List -->
@@ -198,7 +199,7 @@
       </div>
     </section>
 
-    <!-- TAB 5: Pixel Art Portfolio & Daftar Harga -->
+    <!-- TAB 5: Galeri Karya & My Project -->
     <section id="tab-portfolio" class="tab-panel">
       <div class="pixel-panel profile-banner">
         <div class="profile-preview-row">
@@ -222,21 +223,62 @@
         </form>
       </div>
 
+      <!-- Dedicated My Project Section (Proyek yang Baru Kuselesaikan) -->
+      <div class="pixel-panel projects-panel">
+        <div class="board-header">
+          <div>
+            <h2 class="section-heading">🚀 My Project</h2>
+            <p class="muted-label">Showcase proyek yang baru kuselesaikan (game, website, aset, atau eksperimen terbaru).</p>
+          </div>
+          <span id="project-count" class="mono summary-tag">0 Proyek</span>
+        </div>
+
+        <form id="project-form" class="project-form">
+          <input type="hidden" id="proj-edit-id" value="" />
+          <div class="project-form-row">
+            <input type="text" id="proj-title" placeholder="Nama proyek yang baru diselesaikan..." maxlength="70" required />
+            <select id="proj-category" aria-label="Kategori Proyek">
+              <option value="Game Dev">Game Dev</option>
+              <option value="Web / Full Stack">Web / Full Stack</option>
+              <option value="Pixel Art">Pixel Art</option>
+              <option value="Cybersecurity">Cybersecurity</option>
+              <option value="Tools / Script">Tools / Script</option>
+            </select>
+            <select id="proj-status" aria-label="Status Proyek">
+              <option value="✅ Selesai">✅ Selesai</option>
+              <option value="🚀 Baru Rilis">🚀 Baru Rilis</option>
+              <option value="🔧 Update">🔧 Update</option>
+            </select>
+            <input type="text" id="proj-date" placeholder="Tanggal selesai (opsional, mis. 21 Nov 2026)" maxlength="30" />
+          </div>
+          <div class="project-form-row">
+            <input type="text" id="proj-tags" placeholder="Tech / Tag (pisah koma: Godot4, GDScript, PC/Android)" maxlength="90" />
+            <input type="url" id="proj-link" placeholder="Link proyek opsional (https://github.com/... atau itch.io)" maxlength="200" />
+          </div>
+          <textarea id="proj-desc" rows="2" placeholder="Cerita singkat hasil proyek yang baru kuselesaikan..." required></textarea>
+          <div class="project-form-actions">
+            <button type="button" id="proj-cancel-btn" class="pixel-btn ghost hidden">Batal</button>
+            <button type="submit" id="proj-submit-btn" class="pixel-btn primary">+ Tambah My Project</button>
+          </div>
+        </form>
+
+        <div id="project-filter-bar" class="tag-filter-bar" aria-label="Filter Kategori My Project"></div>
+        <div id="project-grid" class="project-grid"></div>
+        <p id="project-empty" class="empty-state hidden">Belum ada proyek selesai di kategori ini.</p>
+      </div>
+
+      <!-- Dedicated Galeri Karya (Dipisah dari Daftar Harga) -->
       <div class="pixel-panel portfolio-header-panel">
         <div class="board-header">
           <div>
-            <h2 class="section-heading">🎨 Galeri Karya &amp; Daftar Harga</h2>
-            <p class="muted-label">Tambah, edit, atau saring aset berdasarkan tag (contoh: <code>#FullStack</code>, <code>#Cybersecurity</code>, <code>#16x16</code>).</p>
-          </div>
-          <div class="rate-box">
-            <label for="usd-rate-input" class="muted-label">Kurs $1 (Rp):</label>
-            <input id="usd-rate-input" type="number" min="10000" max="30000" step="50" value="18280" />
+            <h2 class="section-heading">🎨 Galeri Karya</h2>
+            <p class="muted-label">Pajang aset, sprite, atau karya visual dan saring berdasarkan tag (contoh: <code>#FullStack</code>, <code>#Cybersecurity</code>, <code>#16x16</code>).</p>
           </div>
         </div>
 
         <form id="portfolio-form" class="portfolio-form">
           <input type="hidden" id="art-edit-id" value="" />
-          <input type="text" id="art-title" placeholder="Nama Aset / Proyek..." maxlength="60" required />
+          <input type="text" id="art-title" placeholder="Nama Aset / Karya..." maxlength="60" required />
           <select id="art-category" aria-label="Kategori">
             <option value="Asset Pack">Asset Pack</option>
             <option value="Commission">Commission</option>
@@ -258,6 +300,22 @@
         <div id="tag-filter-bar" class="tag-filter-bar" aria-label="Filter Tag Portofolio"></div>
         <div id="portfolio-grid" class="portfolio-grid"></div>
         <p id="portfolio-empty" class="empty-state hidden">Tidak ada karya dengan tag tersebut.</p>
+      </div>
+    </section>
+
+    <!-- TAB 6: Daftar Harga (Terpisah dari Galeri & My Project) -->
+    <section id="tab-pricing" class="tab-panel">
+      <div class="pixel-panel pricing-header-panel">
+        <div class="board-header">
+          <div>
+            <h2 class="section-heading">💰 Daftar Harga &amp; Estimasi Kurs</h2>
+            <p class="muted-label">Tarif paket aset (Itch.io / Ko-fi) dan custom commission — terpisah rapi dari Galeri Karya &amp; My Project.</p>
+          </div>
+          <div class="rate-box">
+            <label for="usd-rate-input" class="muted-label">Kurs $1 (Rp):</label>
+            <input id="usd-rate-input" type="number" min="10000" max="30000" step="50" value="18280" />
+          </div>
+        </div>
       </div>
 
       <div class="main-grid">

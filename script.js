@@ -148,8 +148,8 @@ const CROPTAILS_PLAYLIST_ITEMS = [
 ];
 
 const FALLBACK_UDEMY_SNAPSHOT = {
-  syncVersion: "2026-11-18T05:02+08",
-  syncLabel: "18 Nov 2026 05:02 WIB",
+  syncVersion: "2026-11-21T12:12+08",
+  syncLabel: "21 Nov 2026 12:12",
   courses: {
     gamedev: {
       courseTitle: "Jumpstart to 2D Game Development: Godot 4 for Beginners",
@@ -179,16 +179,16 @@ const FALLBACK_UDEMY_SNAPSHOT = {
     },
     pixelart: {
       courseTitle: "Pixel Art Master Course - Beginner to Professional/Freelance",
-      courseUrl: "https://www.udemy.com/course/pixel-art-master-course/learn/lecture/10984438#content",
-      completedLectures: 9,
+      courseUrl: "https://www.udemy.com/course/pixel-art-master-course/learn/lecture/10984442#content",
+      completedLectures: 15,
       totalLectures: 222,
-      currentStatus: "Bagian 2 • 10. Lines (#10984438 - lanjut)",
-      note: "Bagian 1 Getting started selesai 8/8! Lanjut Lines and Shapes (1/5)",
+      currentStatus: "Bagian 3 • 15. Value and contrast basics ✓ (lanjut #16 Negative & positive space)",
+      note: "Bagian 1 (8/8) & Bagian 2 (5/5) selesai! Lanjut Shading and lighting (2/12)",
       idRange: [711, 730],
       sections: [
         { id: 711, title: "Udemy Pixel Sec 1: Getting started (8/8)", done: true },
-        { id: 712, title: "Udemy Pixel Sec 2: Lines and Shapes [B] (1/5 - aktif #10 Lines)", done: false },
-        { id: 713, title: "Udemy Pixel Sec 3: Shading and lighting [B] (0/12)", done: false },
+        { id: 712, title: "Udemy Pixel Sec 2: Lines and Shapes [B] (5/5)", done: true },
+        { id: 713, title: "Udemy Pixel Sec 3: Shading and lighting [B] (2/12 - lanjut #16)", done: false },
         { id: 714, title: "Udemy Pixel Sec 4: Colours and textures [B] (0/11)", done: false },
         { id: 715, title: "Udemy Pixel Sec 5: Drawing simple objects [B] (0/9)", done: false },
         { id: 716, title: "Udemy Pixel Sec 6: Tiles [B] (0/8)", done: false },
@@ -443,6 +443,7 @@ const DEFAULT_STATE = {
   usdRate: 18280,
   activeTab: "skills",
   activeTagFilter: "Semua",
+  activeProjectFilter: "Semua",
   gradinPlaylistSynced: true,
   udemyGodotSynced: true,
   udemyExactSyncV2: true,
@@ -517,6 +518,28 @@ const DEFAULT_STATE = {
     { id: 205, title: "Nabung $1 Buat Beli Asset / Game", cost: 90 },
     { id: 206, title: "Hari Libur Santai Bebas Tugas", cost: 150 },
   ],
+  projects: [
+    {
+      id: 901,
+      title: "Gradin Farm — 2D Farming Game (Godot 4)",
+      category: "Game Dev",
+      status: "✅ Selesai",
+      completedDate: "17 Nov 2026",
+      description: "Tamat 25 episode Croptails Farming Game! Sudah jadi build Windows (.exe) & Android (.apk), lengkap dengan virtual controls & farming system.",
+      tags: ["Godot4", "GDScript", "PixelArt", "PC/Android"],
+      link: "",
+    },
+    {
+      id: 902,
+      title: "Pixel Guild — RPG Daily Quest & Udemy Tracker",
+      category: "Web / Full Stack",
+      status: "✅ Selesai",
+      completedDate: "19 Nov 2026",
+      description: "Website RPG harian mobile-ready dengan sistem XP, Streak, Mode Hari Libur, sinkronisasi 2 kursus Udemy, dan live di GitHub Pages.",
+      tags: ["HTML", "CSS", "JavaScript", "GitHubPages"],
+      link: "https://master897.github.io/rpg-daily-quest/",
+    },
+  ],
   portfolio: [
     { id: 404, title: "Gradin Farm (Godot 2D Farming Game PC/APK)", category: "Game Dev", tags: ["Godot", "GameDev", "PixelArt"], priceUsd: 10, svgKey: "tile" },
     { id: 401, title: "Potion & RPG Icons Pack", category: "Asset Pack", tags: ["16x16", "RPG", "Icons"], priceUsd: 3, svgKey: "potion" },
@@ -579,6 +602,21 @@ const el = {
   profileBioInput: document.getElementById("profile-bio-input"),
   profileAvatarFile: document.getElementById("profile-avatar-file"),
   usdRateInput: document.getElementById("usd-rate-input"),
+  projectCount: document.getElementById("project-count"),
+  projectForm: document.getElementById("project-form"),
+  projEditId: document.getElementById("proj-edit-id"),
+  projTitle: document.getElementById("proj-title"),
+  projCategory: document.getElementById("proj-category"),
+  projStatus: document.getElementById("proj-status"),
+  projDate: document.getElementById("proj-date"),
+  projTags: document.getElementById("proj-tags"),
+  projLink: document.getElementById("proj-link"),
+  projDesc: document.getElementById("proj-desc"),
+  projSubmitBtn: document.getElementById("proj-submit-btn"),
+  projCancelBtn: document.getElementById("proj-cancel-btn"),
+  projectFilterBar: document.getElementById("project-filter-bar"),
+  projectGrid: document.getElementById("project-grid"),
+  projectEmpty: document.getElementById("project-empty"),
   portfolioForm: document.getElementById("portfolio-form"),
   artEditId: document.getElementById("art-edit-id"),
   artTitle: document.getElementById("art-title"),
@@ -680,6 +718,10 @@ function loadState() {
       applyAutoDayRollover(merged, todayStr);
     }
     ensurePinnedDailyQuests(merged, { resetDone: false });
+    if (!Array.isArray(parsed.projects)) {
+      merged.projects = structuredClone(DEFAULT_STATE.projects);
+    }
+    if (!merged.activeProjectFilter) merged.activeProjectFilter = "Semua";
     return merged;
   } catch {
     return structuredClone(DEFAULT_STATE);
@@ -743,10 +785,17 @@ function evaluateSkillTitles() {
 
   const gamedevDoneCount = (state.skillItems.gamedev || []).filter((i) => i.done).length;
   const gamedevTodoDone = state.todos.filter((t) => t.tag === "GameDev" && t.done).length;
-  const gamedevPortfolioCount = state.portfolio.filter((p) => p.category === "Game Dev").length;
+  const gamedevShowcaseKeys = new Set([
+    ...state.portfolio
+      .filter((p) => p.category === "Game Dev")
+      .map((p) => (p.title || "").split(/[—(]/)[0].trim().toLowerCase()),
+    ...(state.projects || [])
+      .filter((p) => p.category === "Game Dev")
+      .map((p) => (p.title || "").split(/[—(]/)[0].trim().toLowerCase()),
+  ].filter(Boolean));
   if (
     state.unlockedTitles.includes("master_gamedev") &&
-    (gamedevDoneCount + gamedevTodoDone >= 45 || (gamedevPortfolioCount >= 2 && state.level >= 10))
+    (gamedevDoneCount + gamedevTodoDone >= 45 || (gamedevShowcaseKeys.size >= 2 && state.level >= 10))
   ) {
     unlockTitle("legendary_gamedev", "🏛️ APEX GAME DEV! Gelar Tertinggi 'Legendary Game Architect' Terbuka!");
   }
@@ -1083,6 +1132,137 @@ function renderRewards() {
   });
 }
 
+function startEditProject(proj) {
+  el.projEditId.value = String(proj.id);
+  el.projTitle.value = proj.title;
+  el.projCategory.value = proj.category || "Game Dev";
+  el.projStatus.value = proj.status || "✅ Selesai";
+  el.projDate.value = proj.completedDate || "";
+  el.projTags.value = (proj.tags || []).join(", ");
+  el.projLink.value = proj.link || "";
+  el.projDesc.value = proj.description || "";
+  el.projSubmitBtn.textContent = "💾 Update Project";
+  el.projCancelBtn.classList.remove("hidden");
+  el.projTitle.focus();
+}
+
+function resetProjectForm() {
+  el.projEditId.value = "";
+  el.projTitle.value = "";
+  el.projDate.value = "";
+  el.projTags.value = "";
+  el.projLink.value = "";
+  el.projDesc.value = "";
+  el.projSubmitBtn.textContent = "+ Tambah My Project";
+  el.projCancelBtn.classList.add("hidden");
+}
+
+function renderProjects() {
+  if (!el.projectGrid) return;
+  const projects = state.projects || [];
+  if (el.projectCount) el.projectCount.textContent = `${projects.length} Proyek`;
+
+  const filters = new Set(["Semua"]);
+  projects.forEach((p) => {
+    if (p.category) filters.add(p.category);
+  });
+  if (!filters.has(state.activeProjectFilter)) state.activeProjectFilter = "Semua";
+
+  el.projectFilterBar.innerHTML = "";
+  filters.forEach((label) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `filter-pill${state.activeProjectFilter === label ? " active" : ""}`;
+    btn.textContent = label;
+    btn.onclick = () => {
+      state.activeProjectFilter = label;
+      renderProjects();
+    };
+    el.projectFilterBar.appendChild(btn);
+  });
+
+  const visible = projects.filter(
+    (p) => state.activeProjectFilter === "Semua" || p.category === state.activeProjectFilter
+  );
+
+  el.projectGrid.innerHTML = "";
+  el.projectEmpty.classList.toggle("hidden", visible.length > 0);
+
+  visible.forEach((proj) => {
+    const card = document.createElement("article");
+    card.className = "project-card";
+
+    const head = document.createElement("div");
+    head.className = "project-card-head";
+
+    const badges = document.createElement("div");
+    badges.className = "project-badges";
+    const statusBadge = document.createElement("span");
+    statusBadge.className = "project-status-badge";
+    statusBadge.textContent = proj.status || "✅ Selesai";
+    const catBadge = document.createElement("span");
+    catBadge.className = "art-badge";
+    catBadge.textContent = proj.category || "Project";
+    badges.append(statusBadge, catBadge);
+
+    const actions = document.createElement("div");
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "icon-btn";
+    editBtn.title = "Edit proyek";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = () => startEditProject(proj);
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "icon-btn danger";
+    delBtn.title = "Hapus proyek";
+    delBtn.textContent = "×";
+    delBtn.onclick = () => {
+      state.projects = (state.projects || []).filter((p) => p.id !== proj.id);
+      evaluateSkillTitles();
+      render();
+    };
+    actions.append(editBtn, delBtn);
+    head.append(badges, actions);
+
+    const title = document.createElement("h3");
+    title.className = "project-title";
+    title.textContent = proj.title;
+
+    const dateEl = document.createElement("p");
+    dateEl.className = "project-date";
+    dateEl.textContent = `📅 Selesai: ${proj.completedDate || "-"}`;
+
+    const desc = document.createElement("p");
+    desc.className = "project-desc";
+    desc.textContent = proj.description || "";
+
+    const tagsRow = document.createElement("div");
+    tagsRow.className = "art-tags-row";
+    (proj.tags || []).forEach((tag) => {
+      const chip = document.createElement("span");
+      chip.className = "art-tag-chip";
+      chip.textContent = `#${tag}`;
+      tagsRow.appendChild(chip);
+    });
+
+    card.append(head, title, dateEl, desc, tagsRow);
+
+    if (proj.link && /^https?:\/\//i.test(proj.link)) {
+      const linkEl = document.createElement("a");
+      linkEl.className = "project-link";
+      linkEl.href = proj.link;
+      linkEl.target = "_blank";
+      linkEl.rel = "noopener noreferrer";
+      linkEl.textContent = "🔗 Buka Proyek ↗";
+      card.appendChild(linkEl);
+    }
+
+    el.projectGrid.appendChild(card);
+  });
+}
+
 function startEditArt(art) {
   el.artEditId.value = String(art.id);
   el.artTitle.value = art.title;
@@ -1311,6 +1491,7 @@ function render() {
   renderSkillPathsAndTitles();
   renderJournal();
   renderRewards();
+  renderProjects();
   renderPortfolioAndPrices();
   switchTab(state.activeTab || "tracker");
   saveState();
@@ -1401,6 +1582,57 @@ el.profileEditForm.addEventListener("submit", (e) => {
   showToast("✅ Profil portofolio disimpan!");
   render();
 });
+
+if (el.projCancelBtn) {
+  el.projCancelBtn.addEventListener("click", resetProjectForm);
+}
+
+if (el.projectForm) {
+  el.projectForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const editId = el.projEditId.value ? Number(el.projEditId.value) : null;
+    const title = el.projTitle.value.trim();
+    const category = el.projCategory.value;
+    const status = el.projStatus.value;
+    const completedDate =
+      el.projDate.value.trim() ||
+      new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+    const tags = parseTags(el.projTags.value);
+    const link = el.projLink.value.trim();
+    const description = el.projDesc.value.trim();
+    if (!title || !description) return;
+
+    if (!Array.isArray(state.projects)) state.projects = [];
+    if (editId) {
+      const target = state.projects.find((p) => p.id === editId);
+      if (target) {
+        target.title = title;
+        target.category = category;
+        target.status = status;
+        target.completedDate = completedDate;
+        target.tags = tags;
+        target.link = link;
+        target.description = description;
+      }
+      showToast("✏️ My Project berhasil diperbarui!");
+    } else {
+      state.projects.unshift({
+        id: Date.now(),
+        title,
+        category,
+        status,
+        completedDate,
+        description,
+        tags: tags.length ? tags : [category.replace(/\s+/g, "")],
+        link,
+      });
+      showToast("🚀 Proyek baru ditambahkan ke My Project!");
+    }
+    resetProjectForm();
+    evaluateSkillTitles();
+    render();
+  });
+}
 
 el.artCancelBtn.addEventListener("click", resetArtForm);
 
