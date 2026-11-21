@@ -450,6 +450,7 @@ const DEFAULT_STATE = {
   udemySyncVersion: getUdemySnapshot().syncVersion,
   udemyProgress: buildUdemyProgressMap(),
   gacoanQuestAdded: true,
+  udemyPixelChallenge12Added: true,
   equippedTitles: ["apprentice", "noob_cyber", "noob_gamedev", "gamedev_crafter"],
   unlockedTitles: ["apprentice", "noob_cyber", "noob_gamedev", "gamedev_crafter"],
   profileName: "Studio Pixel Gue",
@@ -457,6 +458,8 @@ const DEFAULT_STATE = {
   profileAvatar: null,
   quests: [
     { id: 4, title: "Kerja shift di Mie Gacoan", category: "Kerja", rank: "S", xp: 100, gold: 55, done: false, autoRotated: false, dailyRecurring: true },
+    { id: 1001, title: "Udemy Pixel Challenge 1: Garis lurus & curve 5 titik manual (50×50 px)", category: "PixelArt", rank: "A", xp: 60, gold: 30, done: false, autoRotated: false },
+    { id: 1002, title: "Udemy Pixel Challenge 2: Bentuk & sudut (<45°) + objek 2D flat (lilin/dinamit)", category: "PixelArt", rank: "A", xp: 60, gold: 30, done: false, autoRotated: false },
     { id: 1, title: "Latihan shading pixel art 30 menit", category: "PixelArt", rank: "B", xp: 35, gold: 15, done: false, autoRotated: true },
     { id: 2, title: "Buat 3 ikon RPG 16x16 untuk Itch.io", category: "PixelArt", rank: "A", xp: 60, gold: 30, done: false, autoRotated: true },
     { id: 3, title: "Polish / tambah fitur baru game Godot (gradin-farm)", category: "GameDev", rank: "A", xp: 60, gold: 30, done: false, autoRotated: true },
@@ -718,6 +721,17 @@ function loadState() {
       applyAutoDayRollover(merged, todayStr);
     }
     ensurePinnedDailyQuests(merged, { resetDone: false });
+    if (!parsed.udemyPixelChallenge12Added) {
+      const challengeQuests = DEFAULT_STATE.quests
+        .filter((q) => q.id === 1001 || q.id === 1002)
+        .filter((q) => !merged.quests.some((existing) => existing.id === q.id))
+        .map((q) => structuredClone(q));
+      if (challengeQuests.length) {
+        const pinnedCount = merged.quests.filter((q) => q.dailyRecurring).length;
+        merged.quests.splice(pinnedCount, 0, ...challengeQuests);
+      }
+      merged.udemyPixelChallenge12Added = true;
+    }
     if (!Array.isArray(parsed.projects)) {
       merged.projects = structuredClone(DEFAULT_STATE.projects);
     }
